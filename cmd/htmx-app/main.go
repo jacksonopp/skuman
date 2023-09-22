@@ -1,10 +1,10 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/jacksonopp/htmx-app/internal/html"
 	"github.com/jacksonopp/htmx-app/internal/middleware"
 )
 
@@ -16,9 +16,9 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFiles("web/templates/index.html")
+		t, err := html.GetTemplate("index")
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 		t.Execute(w, nil)
