@@ -13,7 +13,6 @@ func main() {
 	r.Use(middleware.LoggerMiddleware)
 
 	fs := http.FileServer(http.Dir("static"))
-	// r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
