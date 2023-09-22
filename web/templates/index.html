@@ -1,6 +1,6 @@
 {{define "content"}}
   <body>
-    <form hx-post="/api/csv/upload" hx-target="#results" hx-encoding="multipart/form-data" class="grid w-9/12 mx-auto">
+    <form hx-post="/api/csv/upload" hx-target="#results" hx-encoding="multipart/form-data" class="w-9/12 mx-auto grid">
       <label for="file">File</label>
       <input type="file" name="file" id="file" />
       <input type="submit" value="submit" />
