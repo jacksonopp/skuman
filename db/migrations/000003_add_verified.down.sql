@@ -1,0 +1,6 @@
+DROP INDEX IF EXISTS "email";
+
+ALTER TABLE users
+ALTER COLUMN "username" SET NOT NULL,
+DROP COLUMN "email",
+DROP COLUMN "verified";
