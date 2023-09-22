@@ -3,8 +3,8 @@ package unauthorized
 import (
 	"net/http"
 
-	"github.com/jacksonopp/htmx-app/internal/html"
-	"github.com/jacksonopp/htmx-app/internal/logger"
+	"github.com/jacksonopp/skuman/internal/html"
+	"github.com/jacksonopp/skuman/internal/logger"
 )
 
 func (s UnauthorizedPagesServer) handleLogin() {

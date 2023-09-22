@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/jacksonopp/htmx-app/internal/logger"
+	"github.com/jacksonopp/skuman/internal/logger"
 )
 
 type Item struct {

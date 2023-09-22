@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/jacksonopp/htmx-app/internal/logger"
+	"github.com/jacksonopp/skuman/internal/logger"
 )
 
 func LoggerMiddleware(next http.Handler) http.Handler {

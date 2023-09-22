@@ -3,9 +3,9 @@ package csv
 import (
 	"net/http"
 
-	"github.com/jacksonopp/htmx-app/internal/html"
-	"github.com/jacksonopp/htmx-app/internal/logger"
-	"github.com/jacksonopp/htmx-app/internal/sku"
+	"github.com/jacksonopp/skuman/internal/html"
+	"github.com/jacksonopp/skuman/internal/logger"
+	"github.com/jacksonopp/skuman/internal/sku"
 )
 
 func (s CsvServer) handleHealthcheck() {

@@ -2,7 +2,7 @@ package csv
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/jacksonopp/htmx-app/internal/logger"
+	"github.com/jacksonopp/skuman/internal/logger"
 )
 
 type CsvServer struct {

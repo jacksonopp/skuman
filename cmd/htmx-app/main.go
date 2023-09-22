@@ -5,13 +5,15 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jacksonopp/htmx-app/internal/html"
-	"github.com/jacksonopp/htmx-app/internal/logger"
-	"github.com/jacksonopp/htmx-app/internal/middleware"
-	"github.com/jacksonopp/htmx-app/internal/types"
-	"github.com/jacksonopp/htmx-app/servers/auth"
-	"github.com/jacksonopp/htmx-app/servers/csv"
-	"github.com/jacksonopp/htmx-app/servers/pages/unauthorized"
+	"github.com/jacksonopp/skuman/internal/html"
+	"github.com/jacksonopp/skuman/internal/logger"
+	"github.com/jacksonopp/skuman/internal/middleware"
+	"github.com/jacksonopp/skuman/internal/types"
+	"github.com/jacksonopp/skuman/servers/auth"
+	"github.com/jacksonopp/skuman/servers/csv"
+	"github.com/jacksonopp/skuman/servers/pages/unauthorized"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
