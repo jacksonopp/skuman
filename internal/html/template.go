@@ -7,7 +7,7 @@ import (
 
 func GetTemplate(name string) (*template.Template, error) {
 	file := fmt.Sprintf("web/templates/%s.html", name)
-	return template.ParseFiles(file)
+	return template.ParseFiles("web/layout/layout.html", file)
 }
 
 func GetComponent(name string) (*template.Template, error) {
