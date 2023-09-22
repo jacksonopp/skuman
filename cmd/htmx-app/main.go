@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/jacksonopp/skuman/db/db"
 	"github.com/jacksonopp/skuman/internal/html"
 	"github.com/jacksonopp/skuman/internal/logger"
 	"github.com/jacksonopp/skuman/internal/middleware"
@@ -16,8 +19,31 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func main() {
+// go:embed schema.sql
+var ddl string
+
+func openDb() (*db.Queries, context.Context, error) {
 	ctx := context.Background()
+
+	sqldb, err := sql.Open("postgres", "port=5438 user=postgres password=postgres dbname=skuman sslmode=disable")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if _, err := sqldb.ExecContext(ctx, ddl); err != nil {
+		return nil, nil, err
+	}
+
+	queries := db.New(sqldb)
+	return queries, ctx, nil
+}
+
+func main() {
+	q, ctx, err := openDb()
+	if err != nil {
+		logger.Errorln("failed to open db: ", err)
+		os.Exit(1)
+	}
 
 	r := mux.NewRouter()
 	r.Use(middleware.LoggerMiddleware)
@@ -32,11 +58,11 @@ func main() {
 	servers = append(servers, unauthorizedPagesServer)
 
 	csvRouter := r.PathPrefix("/api/csv").Subrouter()
-	csvServer := csv.NewCsvRouter(csvRouter)
+	csvServer := csv.NewCsvRouter(ctx, csvRouter, q)
 	servers = append(servers, csvServer)
 
 	authRouter := r.PathPrefix("/api/auth").Subrouter()
-	authServer := auth.NewAuthServer(ctx, authRouter)
+	authServer := auth.NewAuthServer(ctx, authRouter, q)
 	servers = append(servers, authServer)
 
 	for _, server := range servers {

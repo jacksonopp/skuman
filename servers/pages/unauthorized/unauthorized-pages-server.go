@@ -17,4 +17,5 @@ func NewUnauthorizedPagesServer(ctx context.Context, r *mux.Router) *Unauthorize
 
 func (s UnauthorizedPagesServer) Run() {
 	s.handleLogin()
+	s.handleSignup()
 }
