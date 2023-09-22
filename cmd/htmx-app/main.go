@@ -1,10 +1,10 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jacksonopp/htmx-app/internal/logger"
 	"github.com/jacksonopp/htmx-app/internal/middleware"
 )
 
@@ -12,12 +12,18 @@ func main() {
 	r := mux.NewRouter()
 	r.Use(middleware.LoggerMiddleware)
 
-	r.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("running"))
+	fs := http.FileServer(http.Dir("static"))
+	// r.Handle("/static/*", http.StripPrefix("/static/", fs))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		t, err := template.ParseFiles("web/templates/index.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		t.Execute(w, nil)
 	})
 
-	logger.Infoln("listening on port 3000")
-	if err := http.ListenAndServe(":3000", r); err != nil {
-		logger.Errorln("failed to start server")
-	}
+	http.ListenAndServe(":3000", r)
 }
