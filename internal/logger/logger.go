@@ -28,7 +28,7 @@ func Warningln(v ...any) {
 
 func Warningf(format string, v ...any) {
 	value := fmt.Sprintf(format, v...)
-	log.Printf(infoColor, value)
+	log.Printf(warningColor, value)
 }
 
 func Errorln(v ...any) {

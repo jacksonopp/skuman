@@ -1,29 +1,39 @@
 package authorized
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/jacksonopp/skuman/internal/helpers"
-	"github.com/jacksonopp/skuman/internal/html"
 )
 
-func (s AuthorizedPagesServer) handleValidatePage() {
-	s.r.HandleFunc("/validate/{id}", func(w http.ResponseWriter, r *http.Request) {
+func (s AuthorizedPagesServer) handleVerifyPage() {
+	s.r.HandleFunc("/verify/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		vc := r.URL.Query().Get("code")
 
-		t, err := html.GetTemplate("validate")
+		files := []string{
+			"web/layout/layout.html",
+			"web/templates/verify.html",
+			"web/partials/verify-form/verify-form.html",
+		}
+
+		t, err := template.ParseFiles(files...)
 		if err != nil {
 			helpers.InternalServerError(w, r, err)
 			return
 		}
 
 		data := struct {
-			ID   string
-			Code string
+			ID           string
+			Code         string
+			Error        bool
+			ErrorMessage string
 		}{
-			id, vc,
+			ID:    id,
+			Code:  vc,
+			Error: false,
 		}
 
 		t.Execute(w, data)

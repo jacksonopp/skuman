@@ -18,5 +18,5 @@ func NewAuthorizedPagesServer(ctx context.Context, r *mux.Router, q *db.Queries)
 }
 
 func (s AuthorizedPagesServer) Run() {
-	s.handleValidatePage()
+	s.handleVerifyPage()
 }

@@ -1,7 +1,8 @@
-{{define "content"}}
+{{define "verify-form"}}
 <body class="grid min-w-full min-h-screen place-items-center">
-  <form class="flex flex-col justify-center flex-1 max-w-md space-y-5">
+  <form class="flex flex-col justify-center flex-1 max-w-md space-y-5" hx-patch="/api/auth/validate/{{.ID}}" hx-target="#error-messages" hx-swap="innerHTML">
     <h1 class="text-5xl">Verify you account</h1>
+    <div id="error-messages" aria-live="assertive"></div>
     <p>Enter the code you received in the email below.</p>
     <input type="hidden" name="userid" value="{{.ID}}">
     <div class="flex flex-col w-full space-y-1">

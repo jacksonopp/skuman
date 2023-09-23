@@ -2,15 +2,18 @@ package auth
 
 import (
 	"fmt"
+	"html/template"
 	"math/rand"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jacksonopp/skuman/db/db"
 	"github.com/jacksonopp/skuman/internal/helpers"
 	"github.com/jacksonopp/skuman/internal/html"
+	"github.com/jacksonopp/skuman/internal/logger"
 	"github.com/jacksonopp/skuman/internal/password"
 )
 
@@ -110,6 +113,54 @@ func (s AuthServer) handleCreateAccount() {
 	})
 }
 
+func (s AuthServer) handleAccountVerification() {
+	s.r.Methods("PATCH", "GET").Path("/validate/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		if err := r.ParseForm(); err != nil {
+			// TODO: create form
+			logger.Errorln("error parsing form")
+			return
+		}
+
+		id := vars["id"]
+		vc := r.FormValue("code")
+
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			//  TODO handle error
+			return
+		}
+
+		_, err = s.q.SetVerification(s.ctx, db.SetVerificationParams{
+			VerificationCode: helpers.NullString(vc),
+			ID:               int64(idInt),
+		})
+
+		if err != nil {
+			file := "web/partials/verify-form/verify-error.html"
+			t, err := template.ParseFiles(file)
+			if err != nil {
+				helpers.InternalServerError(w, r, err)
+				return
+			}
+
+			data := struct {
+				Message string
+			}{
+				"Please check that you have the correct verification code.",
+			}
+
+			logger.Warningf("user id [%s] and vericiation code [%s] did not match", id, vc)
+
+			t.Execute(w, data)
+
+			return
+		}
+
+		w.Write([]byte(vc + id))
+	})
+}
+
 func createVerificationCode() string {
 	abc := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	vcSlc := []rune{}
@@ -118,19 +169,4 @@ func createVerificationCode() string {
 		vcSlc = append(vcSlc, abc[idx])
 	}
 	return string(vcSlc)
-}
-
-func (s AuthServer) handleAccountValidation() {
-	s.r.Methods("PATCH", "GET").Path("/validate/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		if err := r.ParseForm(); err != nil {
-			// TODO: create form
-			return
-		}
-
-		id := vars["id"]
-		vc := r.FormValue("validationCode")
-
-		w.Write([]byte(vc + id))
-	})
 }
