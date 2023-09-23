@@ -14,6 +14,7 @@ import (
 	"github.com/jacksonopp/skuman/internal/types"
 	"github.com/jacksonopp/skuman/servers/auth"
 	"github.com/jacksonopp/skuman/servers/csv"
+	"github.com/jacksonopp/skuman/servers/pages/authorized"
 	"github.com/jacksonopp/skuman/servers/pages/unauthorized"
 
 	_ "github.com/lib/pq"
@@ -57,6 +58,10 @@ func main() {
 	unauthorizedPagesServer := unauthorized.NewUnauthorizedPagesServer(ctx, unauthorizedPagesRouter)
 	servers = append(servers, unauthorizedPagesServer)
 
+	authorizedPagesRouter := r.PathPrefix("").Subrouter()
+	authorizedPagesServer := authorized.NewAuthorizedPagesServer(ctx, authorizedPagesRouter, q)
+	servers = append(servers, authorizedPagesServer)
+
 	csvRouter := r.PathPrefix("/api/csv").Subrouter()
 	csvServer := csv.NewCsvRouter(ctx, csvRouter, q)
 	servers = append(servers, csvServer)
@@ -66,7 +71,7 @@ func main() {
 	servers = append(servers, authServer)
 
 	for _, server := range servers {
-		server.Run()
+		go server.Run()
 	}
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

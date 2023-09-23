@@ -1,0 +1,2 @@
+ALTER TABLE users
+DROP CONSTRAINT UQ_user_email UNIQUE(email);

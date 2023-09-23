@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/mail"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jacksonopp/skuman/db/db"
@@ -67,22 +68,32 @@ func (s AuthServer) handleCreateAccount() {
 			helpers.InternalServerError(w, r, err)
 		}
 
-		abc := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-		rand.Shuffle(len(abc), func(i, j int) {
-			abc[i], abc[j] = abc[j], abc[i]
-		})
-		vc := fmt.Sprintf("%s-%s", string(abc[:4]), string(abc[4:8]))
+		vc := createVerificationCode()
 
-		_, err = s.q.CreateUser(s.ctx, db.CreateUserParams{
+		user, err := s.q.CreateUser(s.ctx, db.CreateUserParams{
 			Email:            email,
 			PasswordHash:     hash,
 			VerificationCode: helpers.NullString(vc),
 		})
 		if err != nil {
-			resp := signupError{
-				Ok:      false,
-				Message: "something went wrong creating your user account",
+			fmt.Println(err)
+
+			dupeEmail := strings.Contains(err.Error(), "duplicate key")
+
+			var resp signupError
+
+			if dupeEmail {
+				resp = signupError{
+					Ok:      false,
+					Message: "A user with that email already exists",
+				}
+			} else {
+				resp = signupError{
+					Ok:      false,
+					Message: "Something went wrong creating your user account. Please try again",
+				}
 			}
+
 			t, err := html.GetPartial("signup-form")
 			if err != nil {
 				helpers.InternalServerError(w, r, err)
@@ -92,18 +103,34 @@ func (s AuthServer) handleCreateAccount() {
 			return
 		}
 
-		w.Header().Add("HX-Redirect", "/login")
+		redirectPath := fmt.Sprintf("/validate/%d", user.ID)
+
+		w.Header().Add("HX-Redirect", redirectPath)
 		w.WriteHeader(http.StatusNoContent)
 	})
+}
+
+func createVerificationCode() string {
+	abc := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	vcSlc := []rune{}
+	for i := 0; i < 6; i++ {
+		idx := rand.Intn(len(abc))
+		vcSlc = append(vcSlc, abc[idx])
+	}
+	return string(vcSlc)
 }
 
 func (s AuthServer) handleAccountValidation() {
 	s.r.Methods("PATCH", "GET").Path("/validate/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		_ = vars["id"]
-		r.ParseForm()
+		if err := r.ParseForm(); err != nil {
+			// TODO: create form
+			return
+		}
+
+		id := vars["id"]
 		vc := r.FormValue("validationCode")
 
-		w.Write([]byte(vc))
+		w.Write([]byte(vc + id))
 	})
 }

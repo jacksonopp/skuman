@@ -1,0 +1,14 @@
+{{define "content"}}
+<body class="grid min-w-full min-h-screen place-items-center">
+  <form class="flex flex-col justify-center flex-1 max-w-md space-y-5">
+    <h1 class="text-5xl">Verify you account</h1>
+    <p>Enter the code you received in the email below.</p>
+    <input type="hidden" name="userid" value="{{.ID}}">
+    <div class="flex flex-col w-full space-y-1">
+      <label class="text-sm" for="code">Code</label>
+      <input type="text" name="code" id="code" value="{{.Code}}" class="flex px-3 py-2 font-medium border-2 border-black rounded-lg dark:text-black md:px-4 md:py-3 placeholder:font-normal">
+    </div>
+    <button class="flex items-center justify-center flex-none px-3 py-2 font-medium text-black rounded-lg shadow-lg hover:shadow-xl hover:bg-amber-400 bg-amber-300 md:px-4 md:py-3">Validate my account!</button>
+  </form>
+</body>
+{{end}}
