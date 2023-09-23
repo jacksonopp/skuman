@@ -24,7 +24,7 @@ func (s CsvServer) handleUpload() {
 			return
 		}
 
-		t, err := html.GetComponent("items")
+		t, err := html.GetPartial("items")
 		if err != nil {
 			logger.Errorln("error getting items component", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)

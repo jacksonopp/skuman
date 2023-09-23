@@ -10,7 +10,6 @@ import (
 
 type User struct {
 	ID               int64          `json:"id"`
-	Username         sql.NullString `json:"username"`
 	Email            string         `json:"email"`
 	PasswordHash     string         `json:"password_hash"`
 	Verified         bool           `json:"verified"`

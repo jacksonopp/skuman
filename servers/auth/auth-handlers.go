@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 
+	"github.com/gorilla/mux"
 	"github.com/jacksonopp/skuman/db/db"
 	"github.com/jacksonopp/skuman/internal/helpers"
 	"github.com/jacksonopp/skuman/internal/html"
@@ -38,7 +39,7 @@ func (s AuthServer) handleCreateAccount() {
 				Ok:      false,
 				Message: "Your email isn't formatted correctly",
 			}
-			t, err := html.GetComponent("signup-form")
+			t, err := html.GetPartial("signup-form")
 			if err != nil {
 				helpers.InternalServerError(w, r, err)
 			}
@@ -53,7 +54,7 @@ func (s AuthServer) handleCreateAccount() {
 				Message: "Your passwords do not match",
 				Email:   email,
 			}
-			t, err := html.GetComponent("signup-form")
+			t, err := html.GetPartial("signup-form")
 			if err != nil {
 				helpers.InternalServerError(w, r, err)
 			}
@@ -82,7 +83,7 @@ func (s AuthServer) handleCreateAccount() {
 				Ok:      false,
 				Message: "something went wrong creating your user account",
 			}
-			t, err := html.GetComponent("signup-form")
+			t, err := html.GetPartial("signup-form")
 			if err != nil {
 				helpers.InternalServerError(w, r, err)
 				return
@@ -93,5 +94,16 @@ func (s AuthServer) handleCreateAccount() {
 
 		w.Header().Add("HX-Redirect", "/login")
 		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func (s AuthServer) handleAccountValidation() {
+	s.r.Methods("PATCH", "GET").Path("/validate/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		_ = vars["id"]
+		r.ParseForm()
+		vc := r.FormValue("validationCode")
+
+		w.Write([]byte(vc))
 	})
 }

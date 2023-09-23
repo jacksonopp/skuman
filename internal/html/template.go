@@ -10,7 +10,7 @@ func GetTemplate(name string) (*template.Template, error) {
 	return template.ParseFiles("web/layout/layout.html", file)
 }
 
-func GetComponent(name string) (*template.Template, error) {
-	file := fmt.Sprintf("web/components/%s.html", name)
+func GetPartial(name string) (*template.Template, error) {
+	file := fmt.Sprintf("web/partials/%s.html", name)
 	return template.ParseFiles(file)
 }

@@ -16,7 +16,7 @@ INSERT INTO users (
 ) VALUES (
     $1, $2, false, $3
 )
-RETURNING id, username, email, password_hash, verified, verification_code
+RETURNING id, email, password_hash, verified, verification_code
 `
 
 type CreateUserParams struct {
@@ -30,7 +30,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
 		&i.Verified,
@@ -49,8 +48,32 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const findUserByIdAndVerification = `-- name: FindUserByIdAndVerification :one
+SELECT id, email, password_hash, verified, verification_code FROM users
+WHERE id = $1
+AND verification_code = $2
+`
+
+type FindUserByIdAndVerificationParams struct {
+	ID               int64          `json:"id"`
+	VerificationCode sql.NullString `json:"verification_code"`
+}
+
+func (q *Queries) FindUserByIdAndVerification(ctx context.Context, arg FindUserByIdAndVerificationParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUserByIdAndVerification, arg.ID, arg.VerificationCode)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Verified,
+		&i.VerificationCode,
+	)
+	return i, err
+}
+
 const getUser = `-- name: GetUser :one
-SELECT id, username, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -59,7 +82,6 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
 		&i.Verified,
@@ -69,7 +91,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -78,26 +100,6 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.PasswordHash,
-		&i.Verified,
-		&i.VerificationCode,
-	)
-	return i, err
-}
-
-const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, email, password_hash, verified, verification_code FROM users
-WHERE username = $1 LIMIT 1
-`
-
-func (q *Queries) GetUserByUsername(ctx context.Context, username sql.NullString) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
 		&i.Email,
 		&i.PasswordHash,
 		&i.Verified,
@@ -107,7 +109,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username sql.NullString
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -121,7 +123,6 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.Username,
 			&i.Email,
 			&i.PasswordHash,
 			&i.Verified,
@@ -138,4 +139,46 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const setVerification = `-- name: SetVerification :one
+UPDATE users
+SET verified = true
+WHERE id = $1
+AND verification_code = $2
+RETURNING id, email, password_hash, verified, verification_code
+`
+
+type SetVerificationParams struct {
+	ID               int64          `json:"id"`
+	VerificationCode sql.NullString `json:"verification_code"`
+}
+
+func (q *Queries) SetVerification(ctx context.Context, arg SetVerificationParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, setVerification, arg.ID, arg.VerificationCode)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Verified,
+		&i.VerificationCode,
+	)
+	return i, err
+}
+
+const updateVerificationCode = `-- name: UpdateVerificationCode :exec
+UPDATE users
+SET verification_code = $1
+WHERE id = $2
+`
+
+type UpdateVerificationCodeParams struct {
+	VerificationCode sql.NullString `json:"verification_code"`
+	ID               int64          `json:"id"`
+}
+
+func (q *Queries) UpdateVerificationCode(ctx context.Context, arg UpdateVerificationCodeParams) error {
+	_, err := q.db.ExecContext(ctx, updateVerificationCode, arg.VerificationCode, arg.ID)
+	return err
 }

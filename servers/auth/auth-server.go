@@ -20,4 +20,5 @@ func NewAuthServer(ctx context.Context, r *mux.Router, q *db.Queries) *AuthServe
 func (s AuthServer) Run() {
 	s.handleHealthcheck()
 	s.handleCreateAccount()
+	s.handleAccountValidation()
 }

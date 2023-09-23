@@ -1,12 +1,10 @@
 Table users {
   id bigserial [primary key]
-  username varchar [unique]
   email varchar [not null, unique]
   password_hash varchar [not null]
   verified boolean [not null]
   verification_code varchar
   Indexes {
-    username
     email
   }
 }
