@@ -21,4 +21,5 @@ func (s AuthServer) Run() {
 	s.handleHealthcheck()
 	s.handleCreateAccount()
 	s.handleAccountVerification()
+	s.handleLogin()
 }

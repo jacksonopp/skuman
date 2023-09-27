@@ -16,7 +16,7 @@ INSERT INTO users (
 ) VALUES (
     $1, $2, false, $3
 )
-RETURNING id, email, password_hash, verified, verification_code
+RETURNING id, email, password_hash, verified, verification_code, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -34,6 +34,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordHash,
 		&i.Verified,
 		&i.VerificationCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -49,7 +51,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const findUserByIdAndVerification = `-- name: FindUserByIdAndVerification :one
-SELECT id, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code, created_at, updated_at FROM users
 WHERE id = $1
 AND verification_code = $2
 `
@@ -68,12 +70,14 @@ func (q *Queries) FindUserByIdAndVerification(ctx context.Context, arg FindUserB
 		&i.PasswordHash,
 		&i.Verified,
 		&i.VerificationCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code, created_at, updated_at FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -86,12 +90,14 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.PasswordHash,
 		&i.Verified,
 		&i.VerificationCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -104,12 +110,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordHash,
 		&i.Verified,
 		&i.VerificationCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, email, password_hash, verified, verification_code FROM users
+SELECT id, email, password_hash, verified, verification_code, created_at, updated_at FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -127,6 +135,8 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.PasswordHash,
 			&i.Verified,
 			&i.VerificationCode,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -146,7 +156,7 @@ UPDATE users
 SET verified = true
 WHERE id = $1
 AND verification_code = $2
-RETURNING id, email, password_hash, verified, verification_code
+RETURNING id, email, password_hash, verified, verification_code, created_at, updated_at
 `
 
 type SetVerificationParams struct {
@@ -163,6 +173,8 @@ func (q *Queries) SetVerification(ctx context.Context, arg SetVerificationParams
 		&i.PasswordHash,
 		&i.Verified,
 		&i.VerificationCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

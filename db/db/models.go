@@ -14,4 +14,6 @@ type User struct {
 	PasswordHash     string         `json:"password_hash"`
 	Verified         bool           `json:"verified"`
 	VerificationCode sql.NullString `json:"verification_code"`
+	CreatedAt        sql.NullTime   `json:"created_at"`
+	UpdatedAt        sql.NullTime   `json:"updated_at"`
 }

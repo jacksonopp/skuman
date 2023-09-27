@@ -4,6 +4,8 @@ Table users {
   password_hash varchar [not null]
   verified boolean [not null]
   verification_code varchar
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
   Indexes {
     email
   }

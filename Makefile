@@ -28,4 +28,4 @@ dbdown:
 	migrate -source "file://db/migrations" -database "postgresql://postgres:postgres@localhost:5438/skuman?sslmode=disable" -verbose down
 
 dbdown-one:
-	migrate -source "file://db/migrations" -database "postgresql://postgres:postgres@localhost:5438/login?sslmode=disable" -verbose down 1
+	migrate -source "file://db/migrations" -database "postgresql://postgres:postgres@localhost:5438/skuman?sslmode=disable" -verbose down 1

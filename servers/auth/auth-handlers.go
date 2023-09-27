@@ -15,6 +15,7 @@ import (
 	"github.com/jacksonopp/skuman/internal/html"
 	"github.com/jacksonopp/skuman/internal/logger"
 	"github.com/jacksonopp/skuman/internal/password"
+	"github.com/jacksonopp/skuman/internal/types"
 )
 
 func (s AuthServer) handleHealthcheck() {
@@ -144,10 +145,8 @@ func (s AuthServer) handleAccountVerification() {
 				return
 			}
 
-			data := struct {
-				Message string
-			}{
-				"Please check that you have the correct verification code.",
+			data := types.BannerError{
+				Message: "Please check that you have the correct verification code.",
 			}
 
 			logger.Warningf("user id [%s] and vericiation code [%s] did not match", id, vc)
@@ -158,6 +157,51 @@ func (s AuthServer) handleAccountVerification() {
 		}
 
 		w.Write([]byte(vc + id))
+	})
+}
+
+func (s AuthServer) handleLogin() {
+	s.r.Methods("POST").Path("/login").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		email := r.Form["email"][0]
+		pw := r.Form["password"][0]
+
+		errorPartial := "web/partials/error-banner.html"
+
+		user, err := s.q.GetUserByEmail(s.ctx, email)
+		if err != nil {
+			t, err := template.ParseFiles(errorPartial)
+			if err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			data := types.BannerError{
+				Message: fmt.Sprintf("Could not find user with email: %s", email),
+			}
+			t.Execute(w, data)
+			logger.Errorf("user with %s not found", email)
+			return
+		}
+
+		ok := password.CheckPasswordHash(pw, user.PasswordHash)
+		if !ok {
+			// handle error
+			t, err := template.ParseFiles(errorPartial)
+			if err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			data := types.BannerError{
+				Message: "Invalid password.",
+			}
+			t.Execute(w, data)
+			logger.Errorf("invalid password")
+			return
+		}
+
+		fmt.Println(email, pw)
+
+		w.Write([]byte("working on it"))
 	})
 }
 

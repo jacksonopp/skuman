@@ -43,7 +43,7 @@ func main() {
 	q, ctx, err := openDb()
 	if err != nil {
 		logger.Errorln("failed to open db: ", err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 
 	r := mux.NewRouter()
@@ -84,5 +84,9 @@ func main() {
 		t.Execute(w, nil)
 	})
 
-	http.ListenAndServe(":3000", r)
+	logger.Infoln("server listening on port :3000")
+	if err := http.ListenAndServe(":3000", r); err != nil {
+		logger.Errorln("Could not start server: ", err)
+		os.Exit(1)
+	}
 }
