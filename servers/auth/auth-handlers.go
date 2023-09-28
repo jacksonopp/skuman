@@ -8,11 +8,14 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jacksonopp/skuman/db/db"
 	"github.com/jacksonopp/skuman/internal/helpers"
 	"github.com/jacksonopp/skuman/internal/html"
+	"github.com/jacksonopp/skuman/internal/jwt"
 	"github.com/jacksonopp/skuman/internal/logger"
 	"github.com/jacksonopp/skuman/internal/password"
 	"github.com/jacksonopp/skuman/internal/types"
@@ -172,6 +175,7 @@ func (s AuthServer) handleLogin() {
 		if err != nil {
 			t, err := template.ParseFiles(errorPartial)
 			if err != nil {
+				logger.Errorln(err)
 				http.Error(w, "internal server error", http.StatusInternalServerError)
 				return
 			}
@@ -186,6 +190,7 @@ func (s AuthServer) handleLogin() {
 		ok := password.CheckPasswordHash(pw, user.PasswordHash)
 		if !ok {
 			// handle error
+			logger.Errorln("invalid password")
 			t, err := template.ParseFiles(errorPartial)
 			if err != nil {
 				http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -199,9 +204,27 @@ func (s AuthServer) handleLogin() {
 			return
 		}
 
-		fmt.Println(email, pw)
+		res, err := s.tx.CreateSessionTx(s.ctx, db.CreateSessionParams{
+			SessionID: uuid.NewString(),
+			UserID:    user.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 12),
+		})
 
-		w.Write([]byte("working on it"))
+		if err != nil {
+			logger.Errorln(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		claim := jwt.NewClaims(res)
+		cookie, err := claimToCookie(&claim)
+		if err != nil {
+			logger.Errorln(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		http.SetCookie(w, cookie)
+		w.Header().Add("HX-Redirect", "/")
+		http.Redirect(w, r, "/", http.StatusFound)
 	})
 }
 

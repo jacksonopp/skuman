@@ -3,12 +3,20 @@ SELECT sessions.session_id, sessions.expires_at, users.id, users.email FROM sess
 INNER JOIN users ON sessions.user_id=users.id
 WHERE session_id = $1;
 
+-- name: GetSessionByUserId :one
+SELECT sessions.session_id, sessions.expires_at, users.id, users.email FROM sessions
+INNER JOIN users ON sessions.user_id=users.id
+WHERE user_id = $1;
+
 -- name: CreateSession :one
 INSERT INTO sessions (
   session_id, user_id, expires_at
 ) VALUES (
   $1, $2, $3
 )
+ON CONFLICT (user_id)
+DO
+  UPDATE SET expires_at = $3
 RETURNING *;
 
 -- name: UpdateSession :one

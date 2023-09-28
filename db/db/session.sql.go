@@ -16,6 +16,9 @@ INSERT INTO sessions (
 ) VALUES (
   $1, $2, $3
 )
+ON CONFLICT (user_id)
+DO
+  UPDATE SET expires_at = $3
 RETURNING id, session_id, user_id, created_at, expires_at
 `
 
@@ -74,6 +77,31 @@ type GetSessionBySessionIdRow struct {
 func (q *Queries) GetSessionBySessionId(ctx context.Context, sessionID string) (GetSessionBySessionIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getSessionBySessionId, sessionID)
 	var i GetSessionBySessionIdRow
+	err := row.Scan(
+		&i.SessionID,
+		&i.ExpiresAt,
+		&i.ID,
+		&i.Email,
+	)
+	return i, err
+}
+
+const getSessionByUserId = `-- name: GetSessionByUserId :one
+SELECT sessions.session_id, sessions.expires_at, users.id, users.email FROM sessions
+INNER JOIN users ON sessions.user_id=users.id
+WHERE user_id = $1
+`
+
+type GetSessionByUserIdRow struct {
+	SessionID string    `json:"session_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+	ID        int64     `json:"id"`
+	Email     string    `json:"email"`
+}
+
+func (q *Queries) GetSessionByUserId(ctx context.Context, userID int64) (GetSessionByUserIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getSessionByUserId, userID)
+	var i GetSessionByUserIdRow
 	err := row.Scan(
 		&i.SessionID,
 		&i.ExpiresAt,

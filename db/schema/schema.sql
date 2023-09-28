@@ -11,7 +11,7 @@ CREATE TABLE "users" (
 CREATE TABLE "sessions" (
   "id" bigserial PRIMARY KEY,
   "session_id" varchar UNIQUE NOT NULL,
-  "user_id" bigint NOT NULL,
+  "user_id" bigint UNIQUE NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "expires_at" timestamp NOT NULL
 );

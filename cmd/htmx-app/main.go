@@ -23,24 +23,36 @@ import (
 // go:embed schema.sql
 var ddl string
 
-func openDb() (*db.Queries, context.Context, error) {
+type openDbResult struct {
+	q   *db.Queries
+	tx  *db.TxStore
+	ctx context.Context
+}
+
+func openDb() (*openDbResult, error) {
 	ctx := context.Background()
 
 	sqldb, err := sql.Open("postgres", "port=5438 user=postgres password=postgres dbname=skuman sslmode=disable")
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if _, err := sqldb.ExecContext(ctx, ddl); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	queries := db.New(sqldb)
-	return queries, ctx, nil
+	txStore := db.NewTxStore(sqldb)
+
+	return &openDbResult{
+		q:   queries,
+		tx:  txStore,
+		ctx: ctx,
+	}, nil
 }
 
 func main() {
-	q, ctx, err := openDb()
+	res, err := openDb()
 	if err != nil {
 		logger.Errorln("failed to open db: ", err)
 		os.Exit(2)
@@ -55,19 +67,19 @@ func main() {
 	servers := []types.Server{}
 
 	unauthorizedPagesRouter := r.PathPrefix("").Subrouter()
-	unauthorizedPagesServer := unauthorized.NewUnauthorizedPagesServer(ctx, unauthorizedPagesRouter)
+	unauthorizedPagesServer := unauthorized.NewUnauthorizedPagesServer(res.ctx, unauthorizedPagesRouter)
 	servers = append(servers, unauthorizedPagesServer)
 
 	authorizedPagesRouter := r.PathPrefix("").Subrouter()
-	authorizedPagesServer := authorized.NewAuthorizedPagesServer(ctx, authorizedPagesRouter, q)
+	authorizedPagesServer := authorized.NewAuthorizedPagesServer(res.ctx, authorizedPagesRouter, res.q)
 	servers = append(servers, authorizedPagesServer)
 
 	csvRouter := r.PathPrefix("/api/csv").Subrouter()
-	csvServer := csv.NewCsvRouter(ctx, csvRouter, q)
+	csvServer := csv.NewCsvRouter(res.ctx, csvRouter, res.q)
 	servers = append(servers, csvServer)
 
 	authRouter := r.PathPrefix("/api/auth").Subrouter()
-	authServer := auth.NewAuthServer(ctx, authRouter, q)
+	authServer := auth.NewAuthServer(res.ctx, authRouter, res.q, res.tx)
 	servers = append(servers, authServer)
 
 	for _, server := range servers {
