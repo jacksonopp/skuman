@@ -10,3 +10,15 @@ Table users {
     email
   }
 }
+
+Table sessions {
+  id bigserial [primary key]
+  session_id varchar [unique, not null]
+  user_id bigint [not null, ref: - users.id]
+  created_at timestamp [not null, default: `now()`]
+  expires_at timestamp [not null]
+
+  Indexes {
+    session_id
+  }
+}
